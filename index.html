@@ -1547,6 +1547,7 @@
         let totalSeriesEntreno = 0;
         let totalRepsEntreno = 0;
         let msgCompletadoTimeout = null;
+        let guardandoEjercicio = false;
 
         // ==========================================
         // UI
@@ -1816,7 +1817,9 @@
                 }
 
                 modoEntrenoActivo = true;
-                ejerciciosEntreno = ejercicios.map(e => ({ ...e }));
+                // Los ejercicios pueden pertenecer a varios días. Durante este
+                // entrenamiento guardamos el día que el usuario ha seleccionado.
+                ejerciciosEntreno = ejercicios.map(e => ({ ...e, dia }));
                 idxEjercicioActual = 0;
                 recordsConseguidos = [];
                 startTimeEntreno = Date.now();
@@ -1824,6 +1827,7 @@
                 totalVolumenEntreno = 0;
                 totalSeriesEntreno = 0;
                 totalRepsEntreno = 0;
+                guardandoEjercicio = false;
 
                 document.getElementById('modoEntreno').classList.add('open');
                 document.getElementById('meTitulo').textContent = `🏋️ ${CONFIG.NOMBRES_DIAS[dia]}`;
@@ -1932,15 +1936,20 @@
             },
 
             _guardarEjercicio() {
+                if (guardandoEjercicio) return;
+
                 const ej = ejerciciosEntreno[idxEjercicioActual];
-                const peso = parseFloat(document.getElementById('mePeso').value);
+                const pesoIntroducido = document.getElementById('mePeso').value.trim();
+                const peso = pesoIntroducido === '' ? 0 : parseFloat(pesoIntroducido);
                 const reps = document.getElementById('meReps').value.trim() || '-';
                 const notas = document.getElementById('meNotas').value.trim() || '';
 
-                if (!peso || peso === 0) {
+                if (!Number.isFinite(peso) || peso < 0) {
                     UI.toast('Introduce un peso válido', 'error');
                     return;
                 }
+
+                guardandoEjercicio = true;
 
                 const repsNum = reps.split(',').map(Number).reduce((a, b) => a + b, 0) || 0;
                 const seriesNum = reps.split(',').length || 0;
@@ -1973,7 +1982,7 @@
                     STATE.historialEntrenos.push({
                         fecha: hoy,
                         dia: dia,
-                        tipo: CONFIG.TIPOS_RUTINA[dia] || dia.toUpperCase(),
+                        tipo: CONFIG.TIPOS_RUTINA[dia] || String(dia || '').toUpperCase(),
                         ejercicios: [registroEjercicio]
                     });
                 }
@@ -2000,11 +2009,20 @@
 
                 idxEjercicioActual++;
                 if (idxEjercicioActual >= ejerciciosEntreno.length) {
-                    setTimeout(() => this._finalizarEntreno(), CONFIG.TIEMPO_MSG_COMPLETADO + 300);
+                    setTimeout(() => {
+                        guardandoEjercicio = false;
+                        this._finalizarEntreno();
+                    }, CONFIG.TIEMPO_MSG_COMPLETADO + 300);
                 } else if (CONFIG.TEMPORIZADOR_DESCANSO) {
-                    setTimeout(() => this._mostrarDescanso(), CONFIG.TIEMPO_MSG_COMPLETADO);
+                    setTimeout(() => {
+                        guardandoEjercicio = false;
+                        this._mostrarDescanso();
+                    }, CONFIG.TIEMPO_MSG_COMPLETADO);
                 } else {
-                    setTimeout(() => this._mostrarEjercicio(), CONFIG.TIEMPO_MSG_COMPLETADO);
+                    setTimeout(() => {
+                        guardandoEjercicio = false;
+                        this._mostrarEjercicio();
+                    }, CONFIG.TIEMPO_MSG_COMPLETADO);
                 }
             },
 
