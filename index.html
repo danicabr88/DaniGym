@@ -1426,30 +1426,8 @@
                 return `${year}-W${String(week).padStart(2, '0')}`;
             },
             resetAll() { localStorage.removeItem(CONFIG.STORAGE_KEY);
-                location.reload(); },
-//MODIFICADO VIEJO EXPORT PARA QUE FUNCIONE DESDE ANDROID
-           /* async exportar() {
-                try {
-                    // Las fotos de progreso viven en IndexedDB, no en STATE. Se
-                    // añaden al JSON solo para el backup y no al localStorage.
-                    const fotosProgreso = await Fotos.exportarBackup();
-                    const backup = {
-                        ...STATE,
-                        fotosProgreso: { version: 1, diasFotos: fotosProgreso }
-                    };
-                    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-                    const a = document.createElement('a');
-                    const url = URL.createObjectURL(blob);
-                    a.href = url;
-                    a.download = 'nicogym_backup.json';
-                    a.click();
-                    setTimeout(() => URL.revokeObjectURL(url), 0);
-                    UI.toast('✅ Datos exportados', 'success');
-                } catch (err) {
-                    console.error('Error al exportar las fotos:', err);
-                    UI.toast('❌ Error al exportar las fotos', 'error');
-                }
-            },*/
+                location.reload(); 
+            },
             async exportar() {
                 try {
                     // Las fotos de progreso viven en IndexedDB, no en STATE.
